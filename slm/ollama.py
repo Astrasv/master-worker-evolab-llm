@@ -1,20 +1,7 @@
 import ollama
-
-# structured input and structed output from the slm
-class SLMInput:
-    def __init__(self, system_message, user_message):
-        self.system_message = system_message
-        self.user_message = user_message
-    
-
-
-
-
 class SLMModel:
     def __init__(self, model_name):
         self.model_name = model_name
-
-
 
     def generate_response(self, messages):
         response = ollama.chat(
@@ -23,7 +10,6 @@ class SLMModel:
         )
         return response["message"]["content"]
     
-
 # Main is just for checking
 if __name__ == "__main__":
     model = SLMModel("phi3")

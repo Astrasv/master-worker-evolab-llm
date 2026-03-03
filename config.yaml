@@ -1,0 +1,56 @@
+project_name: "Master-worker SLM"
+version: "1.0.0"
+
+# provider settings
+provider: "ollama" 
+base_url: "http://localhost:11434"
+
+# agent configs
+agents:
+  master:
+    model: "phi4:14b"
+    temperature: 0.1  
+    system_role: "Architect & Task Decomposer"
+  
+  orchestrator:
+    model: "phi4:14b"
+    temperature: 0.1  
+    system_role: "Architect & Task Decomposer"
+
+  worker_coder:
+    model: "qwen2.5-coder:7b"
+    temperature: 0.3  
+    # For now we have no limit on concurrency, but this can be added later if needed
+    # concurrency_limit: 4  # How many coders can run in parallel
+    system_role: "Specialized Software Engineer"
+
+  unit_verifier:
+    model: "qwen2.5-coder:7b"
+    temperature: 0.0  # Zero temperature for strict test generation
+    system_role: "QA & Edge-Case Specialist"
+
+  integration_verifier:
+    model: "phi4:14b"
+    temperature: 0.1
+    system_role: "Integration & Logic Validator"
+
+# --- Evolution Algorithm Defaults ---
+# These are passed to the Master to guide the sub-task breakdown
+ea_defaults:
+  language: "python"
+  libraries: ["numpy", "scipy", "matplotlib"]
+  standard_components:
+    - "Individual Representation"
+    - "Population Initialization"
+    - "Fitness Function"
+    - "Selection Mechanism"
+    - "Genetic Operators (Crossover/Mutation)"
+    - "Evolutionary Loop"
+
+# --- Execution Sandbox ---
+# Safety settings for running generated code
+sandbox:
+  enabled: true
+  timeout_seconds: 10
+  allow_network: false
+  max_memory_mb: 512
