@@ -10,6 +10,9 @@ from agents.orchestrator import OrchestratorAgent
 from agents.integration_verifier import IntegrationVerifierAgent
 from utils.load_config import load_config
 from workflow.state import GraphState, WorkerState
+import logging
+
+logger = logging.getLogger(__name__)
 
 class GraphEngine:
     def __init__(self, config_path="config.yaml"):
@@ -22,31 +25,46 @@ class GraphEngine:
         self.integration_verifier = IntegrationVerifierAgent(self.config)
 
     def genome_node(self, state: GraphState):
-        print("running genome generator...")
+        logger.info("=== STAGE: Genome Generator ===")
+        logger.info("Running genome generator...")
         genome = self.genome_generator.run(state["problem"])
+        logger.info(f"Generated Genome Code:\n{genome.code}\n")
+        logger.info(f"Genome Explanation:\n{genome.explanation}\n")
         return {"genome": genome}
 
     def master_node(self, state: GraphState):
-        print("running master...")
+        logger.info("=== STAGE: Master Node ===")
+        logger.info("Running master to generate subtasks...")
         subtask_list = self.master.run(state["problem"], state["genome"])
+        logger.info(f"Generated {len(subtask_list.tasks)} subtasks:")
+        for idx, task in enumerate(subtask_list.tasks):
+            logger.info(f"Subtask {idx + 1}: [{task.subtask_id}] {task.subtask_title}")
+            logger.info(f"Instructions: {task.coder_instructions}\n")
         return {"subtasks": subtask_list.tasks}
 
     def worker_subgraph(self, worker_state: WorkerState):
         subtask = worker_state["subtask"]
         genome = worker_state["genome"]
-        print(f"[{subtask.subtask_title}] starting worker processing...")
+        logger.info(f"=== STAGE: Worker Processing for [{subtask.subtask_title}] ===")
         
         max_retries = 3
         feedback = None
         for attempt in range(max_retries):
-            print(f"[{subtask.subtask_title}] worker attempt {attempt + 1}")
+            logger.info(f"[{subtask.subtask_title}] Worker attempt {attempt + 1}")
             worker_response = self.worker.run(genome, subtask, feedback)
-            print(f"[{subtask.subtask_title}] verifying...")
+            logger.info(f"[{subtask.subtask_title}] Generated Code Attempt {attempt + 1}:\n{worker_response.code}\n")
+            
+            logger.info(f"[{subtask.subtask_title}] Verifying attempt {attempt + 1}...")
             verification = self.unit_verifier.run(worker_response, subtask)
+            
             if verification.verified:
-                print(f"[{subtask.subtask_title}] verified!")
+                logger.info(f"[{subtask.subtask_title}] Unit Verification SUCCESS!")
                 return {"verified_subtasks": [verification]}
-            feedback = verification.feedback
+            else:
+                logger.warning(f"[{subtask.subtask_title}] Unit Verification FAILED. Feedback: {verification.feedback}")
+                feedback = verification.feedback
+        
+        logger.error(f"[{subtask.subtask_title}] Max retries reached. Using last unverified code.")
         return {"verified_subtasks": [verification]}
 
     def map_subtasks(self, state: GraphState):
@@ -57,25 +75,36 @@ class GraphEngine:
         ]
 
     def orchestrator_node(self, state: GraphState):
-        print(f"running orchestrator (attempt {state.get('iterations', 0) + 1})...")
+        iteration = state.get("iterations", 0) + 1
+        logger.info(f"=== STAGE: Orchestrator (Attempt {iteration}) ===")
+        
         verified_list = UnitVerifyResponseList(responses=state["verified_subtasks"])
         response = self.orchestrator.run(
             state["genome"], 
             verified_list, 
             feedback=state.get("integration_feedback")
         )
-        return {"final_code": response.code, "iterations": state.get("iterations", 0) + 1}
+        logger.info(f"Orchestrated Final Code:\n{response.code}\n")
+        return {"final_code": response.code, "iterations": iteration}
 
     def integration_node(self, state: GraphState):
-        print("running integration verifier...")
+        logger.info("=== STAGE: Integration Verifier ===")
         code_resp = CodeResponse(code=state["final_code"])
         result = self.integration_verifier.run(code_resp)
+        
+        if result.verified:
+            logger.info("Integration Verification SUCCESS! Code is valid.")
+        else:
+            logger.warning(f"Integration Verification FAILED. Feedback: {result.feedback}")
+            
         return {"integration_feedback": result.feedback if not result.verified else None, "verified": result.verified}
 
     def should_continue(self, state: GraphState):
         # check if integration passed or max retries reached
         if state.get("verified") or state.get("iterations", 0) >= 3:
+            logger.info("=== Graph Execution Finished ===")
             return END
+        logger.info("Retrying orchestration based on feedback...")
         return "orchestrator_node"
 
     def build(self):

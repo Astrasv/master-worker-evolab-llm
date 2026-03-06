@@ -9,37 +9,37 @@ base_url: "https://api.groq.com/openai/v1"
 agents:
   genome_generator:
     provider: "chatgroq"
-    model_name: "llama-3.3-70b-versatile"
+    model_name: "openai/gpt-oss-20b"
     temperature: 0.1  
     system_role: "evolutionary algorithm architect"
     
   master:
     provider: "chatgroq"
-    model_name: "llama-3.3-70b-versatile"
+    model_name: "openai/gpt-oss-20b"
     temperature: 0.1  
     system_role: "architect & task decomposer"
   
   orchestrator:
     provider: "chatgroq"
-    model_name: "llama-3.3-70b-versatile"
+    model_name: "openai/gpt-oss-20b"
     temperature: 0.1  
     system_role: "architect & task decomposer"
 
   worker_coder:
     provider: "chatgroq"
-    model_name: "llama-3.3-70b-versatile"
+    model_name: "openai/gpt-oss-20b"
     temperature: 0.3  
     system_role: "specialized software engineer"
 
   unit_verifier:
     provider: "chatgroq"
-    model_name: "llama-3.3-70b-versatile"
+    model_name: "openai/gpt-oss-20b"
     temperature: 0.0 
     system_role: "qa & edge-case specialist"
 
   integration_verifier:
     provider: "chatgroq"
-    model_name: "llama-3.3-70b-versatile"
+    model_name: "openai/gpt-oss-20b"
     temperature: 0.1
     system_role: "integration & logic validator"
 
