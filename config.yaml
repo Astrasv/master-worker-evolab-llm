@@ -1,54 +1,61 @@
-project_name: "Master-worker SLM"
+project_name: "master-worker-slm"
 version: "1.0.0"
 
-# provider settings
-provider: "ollama" 
-base_url: "http://localhost:11434"
+# global provider settings (used as fallback)
+provider: "chatgroq" 
+base_url: "https://api.groq.com/openai/v1"
 
 # agent configs
 agents:
-  master:
-    model: "phi4:14b"
+  genome_generator:
+    provider: "chatgroq"
+    model_name: "llama-3.3-70b-versatile"
     temperature: 0.1  
-    system_role: "Architect & Task Decomposer"
+    system_role: "evolutionary algorithm architect"
+    
+  master:
+    provider: "chatgroq"
+    model_name: "llama-3.3-70b-versatile"
+    temperature: 0.1  
+    system_role: "architect & task decomposer"
   
   orchestrator:
-    model: "phi4:14b"
+    provider: "chatgroq"
+    model_name: "llama-3.3-70b-versatile"
     temperature: 0.1  
-    system_role: "Architect & Task Decomposer"
+    system_role: "architect & task decomposer"
 
   worker_coder:
-    model: "qwen2.5-coder:7b"
+    provider: "chatgroq"
+    model_name: "llama-3.3-70b-versatile"
     temperature: 0.3  
-    # For now we have no limit on concurrency, but this can be added later if needed
-    # concurrency_limit: 4  # How many coders can run in parallel
-    system_role: "Specialized Software Engineer"
+    system_role: "specialized software engineer"
 
   unit_verifier:
-    model: "qwen2.5-coder:7b"
-    temperature: 0.0  # Zero temperature for strict test generation
-    system_role: "QA & Edge-Case Specialist"
+    provider: "chatgroq"
+    model_name: "llama-3.3-70b-versatile"
+    temperature: 0.0 
+    system_role: "qa & edge-case specialist"
 
   integration_verifier:
-    model: "phi4:14b"
+    provider: "chatgroq"
+    model_name: "llama-3.3-70b-versatile"
     temperature: 0.1
-    system_role: "Integration & Logic Validator"
+    system_role: "integration & logic validator"
 
-# --- Evolution Algorithm Defaults ---
-# These are passed to the Master to guide the sub-task breakdown
+# --- evolution algorithm defaults ---
 ea_defaults:
   language: "python"
   libraries: ["numpy", "scipy", "matplotlib"]
   standard_components:
-    - "Individual Representation"
-    - "Population Initialization"
-    - "Fitness Function"
-    - "Selection Mechanism"
-    - "Genetic Operators (Crossover/Mutation)"
-    - "Evolutionary Loop"
+    - "individual representation"
+    - "population initialization"
+    - "fitness function"
+    - "selection mechanism"
+    - "genetic operators (crossover/mutation)"
+    - "evolutionary loop"
 
-# --- Execution Sandbox ---
-# Safety settings for running generated code
+# --- execution sandbox ---
 sandbox:
   enabled: true
   timeout_seconds: 10

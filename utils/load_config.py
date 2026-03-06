@@ -1,4 +1,3 @@
-# load config from yaml file
 import yaml
 
 def load_config(config_path="config.yaml"):

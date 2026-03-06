@@ -1,15 +1,27 @@
-from slm.chatgroq import GroqModel
-from models.individual import IndividualResponse
+from models.problem import ProblemRequest
+from workflow.engine import GraphEngine
+
 def main():
-    client = GroqModel("llama-3.1-8b-instant")
-    messages = [
-        {"role": "system", "content": "You are a Evolutionary algorithms coder."},
-        {"role": "user", "content": "Write a small evoluionary algorithm python code fort 0/1 knapsack which show only genome representation. NO need other codes ."
-        }
-    ]
-    response = client.generate_structured_response(messages, IndividualResponse)
-    print(response.model_dump_json())
+    problem = ProblemRequest(
+        problem_id="tsp_001",
+        problem_title="Travelling Salesman Problem",
+        problem_description="find the optimal solution for the travelling salesman problem using an evolutionary algorithm."
+    )
+    
+    engine = GraphEngine()
+    app = engine.build()
+    
+    inputs = {"problem": problem, "verified_subtasks": [], "iterations": 0}
+    final_state = app.invoke(inputs)
+    
+    final_code = final_state["final_code"]
+    print("\n\n============= final code =============\n")
+    print(final_code)
+    print("\n======================================\n")
+    
+    with open("output_code.py", "w") as f:
+        f.write(final_code)
+    print("output saved to output_code.py")
 
 if __name__ == "__main__":
     main()
-
