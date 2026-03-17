@@ -8,7 +8,7 @@ The system uses a master-worker architecture integrated with langgraph to orches
 
 - python 3.11 or higher
 - uv (python package manager)
-- groq api key or local ollama setup
+- groq api key or local ollama setup or openrouter api key
 
 ## Setup
 
@@ -17,14 +17,15 @@ The system uses a master-worker architecture integrated with langgraph to orches
    ```bash
    uv sync
    ```
-3. Create a `.env` file in the root directory and add your groq api key if you are using the chatgroq provider:
+3. Create a `.env` file in the root directory and add your groq api key if you are using the chatgroq provider or openrouter api key for openrouter provider:
    ```env
    GROQ_API_KEY=your_api_key_here
+   OPENROUTER_API_KEY=your_api_key_here
    ```
 
 ## Configuration
 
-Agent behavior and model selection are governed by `config.yaml`. You can configure individual agents to use either `chatgroq` or `ollama`. 
+Agent behavior and model selection are governed by `config.yaml`. You can configure individual agents to use either `chatgroq`, `ollama` or `openrouter`. 
 
 ```yaml
 agents:
@@ -37,6 +38,7 @@ agents:
 
 supported providers:
 - `chatgroq`: requires `GROQ_API_KEY` in the `.env` file.
+- `openrouter`: requires `OPENROUTER_API_KEY` in the `.env` file.
 - `ollama`: requires a local ollama instance running on `http://localhost:11434`.
 
 ## Running the pipeline
