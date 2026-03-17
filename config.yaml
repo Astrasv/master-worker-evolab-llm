@@ -1,45 +1,58 @@
 project_name: "master-worker-slm"
 version: "1.0.0"
 
-# global provider settings (used as fallback)
-provider: "chatgroq" 
-base_url: "https://api.groq.com/openai/v1"
+# Provider and model settings
+llm_providers:
+  openrouter:
+    base_url: "https://openrouter.ai/api/v1"
+    models:
+      default: "qwen/qwen2.5-coder-7b-instruct"
+      reasoning: "qwen/qwen2.5-coder-7b-instruct"
+
+  chatgroq:
+    base_url: "https://api.groq.com/openai/v1"
+    models:
+      default: "llama-3.1-8b-instant"
+      reasoning: "llama-3.1-70b-versatile"
+
+  ollama:
+    base_url: "http://localhost:11434/v1"
+    models:
+      default: "llama3"
+      reasoning: "llama3:70b"
+
+# Selected provider
+active_provider: openrouter
 
 # agent configs
 agents:
   genome_generator:
-    provider: "chatgroq"
-    model_name: "openai/gpt-oss-20b"
+    model: default 
     temperature: 0.1  
     system_role: "evolutionary algorithm architect"
     
   master:
-    provider: "chatgroq"
-    model_name: "openai/gpt-oss-20b"
+    model: reasoning
     temperature: 0.1  
     system_role: "architect & task decomposer"
   
   orchestrator:
-    provider: "chatgroq"
-    model_name: "openai/gpt-oss-20b"
+    model: default
     temperature: 0.1  
     system_role: "architect & task decomposer"
 
   worker_coder:
-    provider: "chatgroq"
-    model_name: "openai/gpt-oss-20b"
+    model: default
     temperature: 0.3  
     system_role: "specialized software engineer"
 
   unit_verifier:
-    provider: "chatgroq"
-    model_name: "openai/gpt-oss-20b"
+    model: reasoning
     temperature: 0.0 
     system_role: "qa & edge-case specialist"
 
   integration_verifier:
-    provider: "chatgroq"
-    model_name: "openai/gpt-oss-20b"
+    model: reasoning
     temperature: 0.1
     system_role: "integration & logic validator"
 
