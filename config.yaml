@@ -74,3 +74,7 @@ sandbox:
   timeout_seconds: 10
   allow_network: false
   max_memory_mb: 512
+
+# --- worker configuration ---
+workers:
+  num_workers: 3  # Number of parallel workers to process subtasks

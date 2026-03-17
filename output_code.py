@@ -3,37 +3,16 @@ import matplotlib.pyplot as plt
 from deap import base, creator, tools
 
 # Problem configuration
-n = 10  # Number of cities
-lower_bound = 0
-upper_bound = 100
+n = 10
+population_size = 100
+num_generations = 100
+mutation_rate = 0.1
 
-# Creator setup
-creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
-creator.create("Individual", list, fitness=creator.FitnessMin)
-
-# Evaluate function
-def evaluate(individual):
-    fitness = 0
-    for i in range(len(individual) - 1):
-        fitness += distances[individual[i]][individual[i+1]]
-    fitness += distances[individual[-1]][individual[0]]
-    return fitness,
-
-def mate(parent1, parent2):
-    crossover_point = np.random.randint(0, len(parent1))
-    child1 = np.concatenate((parent1[:crossover_point], parent2[crossover_point:]))
-    child2 = np.concatenate((parent2[:crossover_point], parent1[crossover_point:]))
-    return child1, child2
-
-def mutate(individual):
-    mutation_point1 = np.random.randint(0, len(individual))
-    mutation_point2 = np.random.randint(0, len(individual))
-    individual[mutation_point1], individual[mutation_point2] = individual[mutation_point2], individual[mutation_point1]
-    return individual
-
-def select(population, fitness):
-    parents = np.random.choice(population, size=2, p=fitness/np.sum(fitness))
-    return parents
+def define_travelling_salesman_problem(n):
+    # Define the problem
+    cities = np.arange(n)
+    distances = np.random.rand(n, n)
+    return cities, distances
 
 def create_individual(n):
     genome = np.random.permutation(n)
@@ -42,39 +21,75 @@ def create_individual(n):
 def initialize_population(n, population_size):
     population = []
     for _ in range(population_size):
-        individual = create_individual(n)
-        population.append(individual)
+        genome = create_individual(n)
+        population.append(genome)
     return population
 
-def run_evolutionary_loop(population, fitness_function, num_generations):
+def fitness_function(genome):
+    total_distance = 0
+    n = len(genome)
+    for i in range(n):
+        city1 = genome[i]
+        city2 = genome[(i + 1) % n]
+        distance = calculate_distance(city1, city2)
+        total_distance += distance
+    return 1 / total_distance
+
+def select_parents(population, fitness):
+    # Select parents based on fitness
+    parents = np.random.choice(population, size=len(population), p=fitness/np.sum(fitness))
+    return parents
+
+def crossover(parent1, parent2):
+    crossover_point = np.random.randint(1, len(parent1))
+    child = np.concatenate((parent1[:crossover_point], parent2[crossover_point:]))
+    return child
+
+def mutate(individual):
+    mutation_point = np.random.randint(len(individual))
+    individual[mutation_point] = np.random.randint(len(individual))
+    return individual
+
+def evolutionary_loop(population, fitness_function, mutation_rate, num_generations):
     for generation in range(num_generations):
-        population = select(population, fitness_function)
-        population = mate(population)
-        population = mutate(population)
-    return population
+        parents = select_parents(population, fitness_function)
+        offspring = crossover(parents)
+        offspring = mutate(offspring, mutation_rate)
+        population = offspring
+    best_individual = select_best_individual(population, fitness_function)
+    return best_individual
 
-def visualize_results(results):
+def visualize_results(route, cities):
+    x = [city[0] for city in cities]
+    y = [city[1] for city in cities]
+
     plt.figure(figsize=(8, 6))
-    plt.plot(results['distance'], label='Distance')
-    plt.xlabel('Iteration')
-    plt.ylabel('Distance')
-    plt.title('Travelling Salesman Problem Results')
-    plt.legend()
+    plt.plot(x, y, 'bo-')
+    plt.plot(x + [x[0]], y + [y[0]], 'r-')
+    plt.xlabel('X Coordinate')
+    plt.ylabel('Y Coordinate')
+    plt.title('Travelling Salesman Problem Route')
     plt.show()
 
-distances = np.random.randint(lower_bound, upper_bound, size=(n, n))
+# Toolbox registration
+creator.create('FitnessMax', base.Fitness, weights=(1.0,))
+creator.create('Individual', list, fitness=creator.FitnessMax)
 
 toolbox = base.Toolbox()
-toolbox.register("individual", create_individual, n=n)
-toolbox.register("population", initialize_population, n=n, population_size=100)
-toolbox.register("evaluate", evaluate)
-toolbox.register("mate", mate)
-toolbox.register("mutate", mutate)
-toolbox.register("select", select)
+toolbox.register('individual', create_individual)
+toolbox.register('population', initialize_population)
+toolbox.register('evaluate', fitness_function)
+toolbox.register('mate', crossover)
+toolbox.register('mutate', mutate)
+toolbox.register('select', tools.selTournament, tournsize=3)
 
-population = toolbox.population()
-fitness_function = toolbox.evaluate
-num_generations = 100
+def main():
+    cities, distances = define_travelling_salesman_problem(n)
+    population = toolbox.population(n, population_size)
+    fitness = toolbox.map(toolbox.evaluate, population)
+    population = toolbox.select(population, fitness)
+    best_individual = evolutionary_loop(population, fitness_function, mutation_rate, num_generations)
+    visualize_results(best_individual, cities)
 
-results = run_evolutionary_loop(population, fitness_function, num_generations)
-visualize_results(results)
+if __name__ == '__main__':
+    main()

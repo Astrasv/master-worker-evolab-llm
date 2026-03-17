@@ -5,6 +5,7 @@ from models.subtasks import SubtaskRequest
 from models.verifiers import UnitVerifyResponse
 import operator
 
+
 # state definition
 class GraphState(TypedDict):
     problem: ProblemRequest
@@ -15,6 +16,10 @@ class GraphState(TypedDict):
     final_code: str
     integration_feedback: Union[str, None]
     iterations: int
+    # batch processing state
+    current_batch_index: int
+    all_subtasks_processed: bool
+
 
 # worker state for map-reduce
 class WorkerState(TypedDict):
